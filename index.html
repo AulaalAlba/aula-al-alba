@@ -469,6 +469,18 @@ details.more[open]{padding-bottom:16px}
 .neu{position:absolute;transform:translate(-50%,-50%);width:clamp(52px,9vw,72px);height:clamp(52px,9vw,72px);border-radius:50%;border:4px solid var(--accent);background:var(--surface);color:var(--fg);font-family:var(--font-head);font-weight:700;font-size:clamp(20px,3.4vw,28px);cursor:pointer;box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 18%,transparent)}
 .neu.on{background:var(--accent);color:var(--accent-fg)}
 .opt.wide .em{line-height:1.1}
+.sdk{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));width:min(100%,calc(var(--n) * 96px))}
+.sdc{aspect-ratio:1;display:grid;place-items:center;background:var(--surface);color:var(--fg);border:0 solid var(--fg);cursor:pointer;padding:6%;min-width:0;font:inherit}
+.sdc.fx{background:var(--soft);cursor:default}
+.sdc.hl{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.sdc.fx.hl{background:color-mix(in srgb,var(--accent) 16%,var(--soft))}
+.sdc.on{outline:4px solid var(--warm);outline-offset:-4px;background:color-mix(in srgb,var(--warm) 14%,var(--surface))}
+.sdk.s9{width:min(100%,640px)}
+.sdk.s9 .sdn{font-size:clamp(18px,4.2vw,34px)}
+.sdn{font-family:var(--font-head);font-weight:700;font-size:clamp(26px,6vw,46px)}
+.sdpal{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.sdo{width:clamp(60px,12vw,84px);aspect-ratio:1;display:grid;place-items:center;border-radius:16px;border:2px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;padding:6px}
+.sdo:hover{border-color:var(--accent)}
 .trwrap{width:100%;display:grid;justify-items:center;gap:12px}
 .trc{border-radius:20px;border:2px solid var(--line);background:#fff;max-width:100%;cursor:crosshair}
 .gpic{display:flex;align-items:center;gap:14px;font-family:var(--font-head);font-weight:700;font-size:28px}
@@ -3202,6 +3214,7 @@ var EFS=[
  {a:'mat',id:'calculo',n:'Cálculo',d:'Sumas, restas, multiplicaciones y divisiones'},
  {a:'mat',id:'fracciones',n:'Fracciones',d:'Partes de un todo'},
  {a:'mat',id:'geometria',n:'Geometría',d:'Figuras planas y cuerpos geométricos'},
+ {a:'mat',id:'sudoku',n:'Sudokus',d:'Lógica: cada dibujo o número una sola vez en cada fila, columna y caja'},
  {a:'mat',id:'medida',n:'Medida y problemas',d:'Reloj, dinero y pequeños problemas'},
  {a:'emo',id:'reconocer',n:'Reconocer emociones',d:'Descubrir qué siente cada persona'},
  {a:'emo',id:'regular',n:'Regular las emociones',d:'Calmarnos y elegir qué hacer'},
@@ -3313,6 +3326,7 @@ var GAMES=[
  {id:'bpow',ef:'cpoder',themed:false,t:'Conoce tus superpoderes',d:'El Foco, el Freno, la Libreta... ¿qué hace cada uno?',f:gBPow,pr:'',ic:['circle','blue','star','red']},
  {id:'bpows',ef:'cpoder',themed:false,t:'¿Qué superpoder uso?',d:'Lee la situación y elige el superpoder que estás usando.',f:gBPows,pr:'',ic:['circle','blue','star','red']},
  {id:'bcare',ef:'ccuido',themed:false,t:'¿Le ayuda o no le ayuda?',d:'Descubre qué hábitos cuidan tu cerebro.',f:gBCare,pr:'',ic:['circle','blue','star','red']},
+ {id:'sudoku',ef:'sudoku',themed:false,t:'Sudokus',d:'Con dibujos (4×4), con números (4×4 y 6×6) y convencionales de 9×9.',f:gSudoku,pr:'',ic:['circle','blue','star','red']},
  {id:'gtr',ef:'grafo',themed:false,t:'Trazos para empezar',d:'Líneas, curvas, zigzag, bucles y espirales para repasar con el dedo.',f:gGTr,pr:'',ic:['circle','blue','star','red']},
  {id:'glet',ef:'grafo',themed:false,t:'Repasa las letras',d:'Vocales, abecedario y mayúsculas, en letra ligada o de imprenta.',f:gGLet,pr:'',ic:['circle','blue','star','red']},
  {id:'gword',ef:'grafo',themed:true,t:'Repasa palabras',d:'Repasa la palabra de cada pictograma.',f:gGWord,pr:'',ic:['circle','blue','star','red']},
@@ -3839,23 +3853,41 @@ function textShape(txt,fs,y,f){
     zone:function(c){c.font='400 '+fs+'px '+f;c.textAlign='center';c.fillStyle='#000';c.strokeStyle='#000';c.lineWidth=fs*.24;c.lineJoin='round';c.lineCap='round';c.strokeText(txt,500,y);c.fillText(txt,500,y)}
   };
 }
+var _CON=null;
+function concretePics(){if(!_CON){_CON=[];['p-alimentos','p-animales','p-frutas','p-hogar','p-instrumentos','p-juguetes','p-objetos-de-higiene','p-objetos-del-cole','p-partes-del-cuerpo','p-prendas-de-vestir','p-transportes','p-utensilios-de-cocina','p-verduras'].forEach(function(c){if(PICT[c])PICT[c][1].forEach(function(x){_CON.push({w:x[0],e:pw(x[0],'')})})})}return _CON}
 function picFor(letter){
   var l=norm(letter);
-  var c=ALLPIC.filter(function(x){return x.w.indexOf(' ')<0&&norm(x.w)[0]===l&&!(l==='c'&&/^ch/.test(norm(x.w)))&&!(l==='l'&&/^ll/.test(norm(x.w)))});
+  function ok(x){var w=norm(x.w);return x.w.indexOf(' ')<0&&w[0]===l&&!(l==='c'&&/^ch/.test(w))&&!(l==='l'&&/^ll/.test(w))}
+  var c=concretePics().filter(ok);if(!c.length)c=ALLPIC.filter(ok);
   return c.length?c[rnd(c.length)]:null;
 }
 /* Repasa las letras */
 var GL=[['a','e','i','o','u'],'bcdfghjklmnñpqrstvxyz'.split(''),'AEIOUBCDFGLMNPRST'.split('')];
+var ABC='abcdefghijklmnñopqrstuvwxyz'.split('');
+function abcRow(){
+  var m=S.abc||'';
+  return '<div class="row" role="group" aria-label="Qué letras practicar"><button class="lv gabc" data-m="" aria-pressed="'+(m==='')+'">Por niveles</button><button class="lv gabc" data-m="min" aria-pressed="'+(m==='min')+'">Abecedario completo a–z</button><button class="lv gabc" data-m="may" aria-pressed="'+(m==='may')+'">Abecedario en mayúsculas A–Z</button></div>';
+}
 function gGLet(L){
-  var letter=nextItem('glet'+L,GL[L-1]),f=GF[S.font],p=picFor(letter);
-  var name=letter.toLowerCase();
-  setPrompt('Repasa la letra '+(L===3?name+' mayúscula':name)+(p?', de '+p.w:'')+'.',first());
-  stage.innerHTML=fontRow()+(p?'<div class="gpic"><span class="emv" style="font-size:64px">'+p.e+'</span><span class="gw">'+p.w+'</span></div>':'');
+  if(S.abc&&S.total!==ABC.length){S.abcI=0;S.total=ABC.length;S.done=0;updProg()}
+  var letter,f=GF[S.font],n=S.abc?ABC.length:0;
+  if(S.abc){letter=ABC[Math.min(S.abcI||0,n-1)];if(S.abc==='may')letter=letter.toUpperCase()}
+  else letter=nextItem('glet'+L,GL[L-1]);
+  var p=picFor(letter),name=letter.toLowerCase(),may=letter!==name;
+  setPrompt((S.abc?'Letra '+((S.abcI||0)+1)+' de '+n+'. ':'')+'Repasa la letra '+name+(may?' mayúscula':'')+(p?', de '+p.w:'')+'.',first());
+  stage.innerHTML=abcRow()+fontRow()+(p?'<div class="gpic"><span class="emv" style="font-size:64px">'+p.e+'</span><span class="gw">'+p.w+'</span></div>':'')
+    +(S.abc?'<div class="count">Letra '+((S.abcI||0)+1)+' de '+n+'</div>':'');
   bindFont(function(){gGLet(L)});
+  stage.querySelectorAll('.gabc').forEach(function(b){b.onclick=function(){
+    S.abc=b.dataset.m||null;S.abcI=0;S.done=0;S.total=S.abc?ABC.length:PER_LEVEL;S.finishing=false;clearTimers();updProg();setMsg('');gGLet(L)}});
   fontReady(f,function(){
     var sh=textShape(letter,S.font==='lig'?420:440,S.font==='lig'?470:500,f);
     tracer({H:620,L:L,brush:S.font==='lig'?52:56,label:'Letra '+letter,guide:sh.guide,mask:sh.mask,zone:sh.zone,
-      onOk:function(){win('¡Muy bien! La '+name+'.');later(function(){gGLet(L);setMsg('')},2400)}});
+      onOk:function(){
+        var last=S.abc&&(S.abcI||0)>=n-1;
+        win(last?'¡Has repasado todo el abecedario!':'¡Muy bien! La '+name+'.');
+        if(S.abc){S.abcI=(S.abcI||0)+1;if(last)return}
+        later(function(){gGLet(L);setMsg('')},2400)}});
   });
 }
 /* Repasa palabras */
@@ -3897,6 +3929,67 @@ function gGTr(L){
     onOk:function(){win('¡Muy bien! '+it.n+'.');later(function(){gGTr(L);setMsg('')},2400)}});
 }
 
+/* ===== SUDOKUS ===== */
+function sdkSolve(g,n,br,bc,lim){
+  var cnt=0;
+  function cands(k){var r=Math.floor(k/n),c=k%n,u={};for(var i=0;i<n;i++){u[g[r*n+i]]=1;u[g[i*n+c]]=1}
+    var r0=r-r%br,c0=c-c%bc;for(var y=r0;y<r0+br;y++)for(var x=c0;x<c0+bc;x++)u[g[y*n+x]]=1;
+    var o=[];for(var v=1;v<=n;v++)if(!u[v])o.push(v);return o}
+  function rec(){var best=-1,bc2=null;
+    for(var k=0;k<n*n;k++)if(g[k]===0){var cs=cands(k);if(!cs.length)return false;if(!bc2||cs.length<bc2.length){best=k;bc2=cs;if(cs.length===1)break}}
+    if(best<0){cnt++;return cnt>=lim}
+    for(var i=0;i<bc2.length;i++){g[best]=bc2[i];if(rec()){g[best]=0;return true}}
+    g[best]=0;return false}
+  rec();return cnt;
+}
+function sdkMake(n,br,bc,holes){
+  var sol=[],r,c;
+  for(r=0;r<n;r++)for(c=0;c<n;c++)sol.push((bc*(r%br)+Math.floor(r/br)+c)%n+1);
+  var map=shuffle(rng(n).map(function(i){return i+1}));sol=sol.map(function(v){return map[v-1]});
+  var rows=[];shuffle(rng(n/br)).forEach(function(b){shuffle(rng(br)).forEach(function(i){rows.push(b*br+i)})});
+  var cols=[];shuffle(rng(n/bc)).forEach(function(b){shuffle(rng(bc)).forEach(function(i){cols.push(b*bc+i)})});
+  var s2=[];rows.forEach(function(rr){cols.forEach(function(cc){s2.push(sol[rr*n+cc])})});sol=s2;
+  var puz=sol.slice(),order=shuffle(rng(n*n)),removed=0;
+  for(var i=0;i<order.length&&removed<holes;i++){var k=order[i],keep=puz[k];puz[k]=0;
+    if(sdkSolve(puz.slice(),n,br,bc,2)===1)removed++;else puz[k]=keep}
+  return {sol:sol,puz:puz};
+}
+var SDK_CATS=['p-animales','p-frutas','p-juguetes','p-transportes'];
+function gSudoku(L){
+  if(S.sdk9&&S.total!==1){S.total=1;S.done=0;updProg()}
+  var cfg=S.sdk9?{n:9,br:3,bc:3,h:[38,46,52][L-1]}:[{n:4,br:2,bc:2,h:6,pic:true},{n:4,br:2,bc:2,h:9},{n:6,br:2,bc:3,h:16}][L-1];
+  var n=cfg.n,P=sdkMake(n,cfg.br,cfg.bc,cfg.h),grid=P.puz.slice(),sel=-1,sym=null;
+  if(cfg.pic){var cat=PICT[SDK_CATS[rnd(SDK_CATS.length)]][1];sym=pick(cat.map(function(x){return x[0]}),n)}
+  function face(v){return sym?'<span class="emv" style="font-size:clamp(28px,7vw,54px)">'+pw(sym[v-1],'')+'</span>':'<span class="sdn">'+v+'</span>'}
+  function name(v){return sym?sym[v-1]:String(v)}
+  setPrompt(sym?'Completa el sudoku: cada dibujo una sola vez en cada fila, columna y caja.':'Completa el sudoku: cada número una sola vez en cada fila, columna y caja.',first());
+  function render(){
+    var h='<div class="row" role="group" aria-label="Tipo de sudoku"><button class="lv gsz" data-z="" aria-pressed="'+!S.sdk9+'">Sudokus pequeños</button><button class="lv gsz" data-z="9" aria-pressed="'+!!S.sdk9+'">Sudoku convencional 9×9</button></div>'
+      +(S.sdk9?'<p class="count">'+['Fácil','Medio','Difícil'][L-1]+' · cambia la dificultad con los niveles</p>':'')
+      +'<div class="sdk'+(n===9?' s9':'')+'" style="--n:'+n+'">';
+    for(var k=0;k<n*n;k++){var r=Math.floor(k/n),c=k%n,fixed=P.puz[k]!==0,v=grid[k];
+      var st='border-top-width:'+(r%cfg.br===0?4:1)+'px;border-left-width:'+(c%cfg.bc===0?4:1)+'px;border-right-width:'+(c===n-1?4:0)+'px;border-bottom-width:'+(r===n-1?4:0)+'px';
+      var hl=sel>=0&&(Math.floor(sel/n)===r||sel%n===c)?' hl':'';
+      h+='<button class="sdc'+(fixed?' fx':'')+(k===sel?' on':'')+hl+'" data-k="'+k+'" style="'+st+'" aria-label="Fila '+(r+1)+', columna '+(c+1)+(v?': '+name(v):': vacía')+'"'+(fixed?' aria-disabled="true"':'')+'>'+(v?face(v):'')+'</button>'}
+    h+='</div><div class="sdpal" role="group" aria-label="Elige qué poner">';
+    for(var v2=1;v2<=n;v2++)h+='<button class="sdo" data-v="'+v2+'" aria-label="'+name(v2)+'">'+face(v2)+'</button>';
+    h+='</div><p class="count">'+(sel<0?'Toca una casilla vacía y después elige qué va.':'Ahora elige qué va en la casilla.')+'</p>';
+    stage.innerHTML=h;
+  }
+  render();
+  stage.onclick=function(e){
+    var z=e.target.closest('.gsz');if(z){S.sdk9=z.dataset.z==='9';S.done=0;S.total=S.sdk9?1:PER_LEVEL;S.finishing=false;clearTimers();updProg();setMsg('');gSudoku(L);return}
+    var c=e.target.closest('.sdc');
+    if(c){var k=+c.dataset.k;if(P.puz[k]!==0||grid[k])return;sel=k;tone(520,.06);render();return}
+    var o=e.target.closest('.sdo');if(!o)return;
+    if(sel<0){setMsg('Primero toca una casilla vacía','soft');return}
+    var v=+o.dataset.v;
+    if(v===P.sol[sel]){grid[sel]=v;sel=-1;tone(660,.12);setMsg('');render();
+      if(grid.indexOf(0)<0){stage.onclick=null;win('¡Sudoku completado!');later(function(){if(S.sdk9){S.done=0;updProg()}gSudoku(L);setMsg('')},2800)}}
+    else{noteErr('sudoku');var cell=stage.querySelector('.sdc[data-k="'+sel+'"]');wrong(cell||o,'Mira la fila, la columna y la caja: '+(sym?'ese dibujo':'ese número')+' no va ahí')}
+  };
+}
+
 (function(){
   function pe(x,st){return '<b class="pe"'+(st?' style="'+st+'"':'')+'>'+x+'</b>'}
   TH2.vdiff=function(){return '<div class="trow2"><span class="te">'+pw('manzana','')+pw('gato','')+'</span><span class="tl">≠</span><span class="te">'+pw('manzana','')+pw('perro','')+'</span></div>'};
@@ -3915,7 +4008,9 @@ function gGTr(L){
   TH2.gtr=function(){return '<svg viewBox="0 0 1000 500" style="width:170px;height:85px" aria-hidden="true"><path d="M80 250 Q180 80 280 250 T480 250 T680 250 T880 250" fill="none" stroke="#DCE8EE" stroke-width="60" stroke-linecap="round"/><path d="M80 250 Q180 80 280 250 T480 250 T680 250 T880 250" fill="none" stroke="#7C8E99" stroke-width="8" stroke-dasharray="20 24" stroke-linecap="round"/><circle cx="80" cy="250" r="26" fill="#1B8449"/></svg>'};
   TH2.glet=function(){return '<div class="tword" style="font-family:var(--font-ex);color:#DCE8EE;-webkit-text-stroke:2px #7C8E99;font-size:70px;letter-spacing:0">a</div>'};
   TH2.gword=function(){return '<div class="tcol"><div class="te">'+pw('sol','☀️')+'</div><div class="tword" style="font-family:var(--font-ex);color:#DCE8EE;-webkit-text-stroke:1.5px #7C8E99;font-size:40px;letter-spacing:0">sol</div></div>'};
+  TH2.sudoku=function(){return tg(4,['1','3','','2','','2','1','','2','','3','1','3','1','','4'].map(function(x){return x?'<b class="pc">'+x+'</b>':'<b class="pe"></b>'}))};
   var IP=['Infantil','Primaria'];
+  META.sudoku=[IP,['TDAH','TEA','Discapacidad intelectual']];
   META.gtr=[['Infantil'],['TDAH','TEA','Discapacidad intelectual','TDL']];
   META.glet=[IP,['Dislexia','TDAH','Discapacidad intelectual','TEA']];
   META.gword=[IP,['Dislexia','TDAH','Discapacidad intelectual','TEA']];
